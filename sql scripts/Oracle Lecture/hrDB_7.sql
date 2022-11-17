@@ -1,0 +1,85 @@
+/* SubQuary */
+SELECT ROUND(AVG(SALARY))
+FROM EMPLOYEES; -- AVG(SALARY) 평균임금
+
+SELECT EMPLOYEE_ID, FIRST_NAME, LAST_NAME
+FROM EMPLOYEES
+WHERE SALARY < 6462; -- 평균 임금 보다 적은 직원
+
+/* where절에서는 집계함수 사용불가 */
+SELECT EMPLOYEE_ID, FIRST_NAME, LAST_NAME
+FROM EMPLOYEES
+WHERE SALARY < ROUND(AVG(SALARY)); -- Error
+
+SELECT EMPLOYEE_ID, FIRST_NAME, LAST_NAME
+FROM EMPLOYEES
+WHERE SALARY < (SELECT ROUND(AVG(SALARY))
+                FROM EMPLOYEES); -- SubQuary
+-- where절에서는 집계함수를 사용 못하기 때문에 이렇게 SubQuary를 해주어야 한다.
+
+SELECT LOCATION_ID
+FROM LOCATIONS
+WHERE STATE_PROVINCE IS NULL;
+-- state_province가 null값인 location_id 값 조회
+
+SELECT *
+FROM DEPARTMENTS
+WHERE LOCATION_ID IN (1000, 1100, 1300, 2000, 2300, 2400);
+-- location_id 값 총 6개
+
+SELECT *
+FROM DEPARTMENTS
+WHERE LOCATION_ID IN (SELECT LOCATION_ID
+                      FROM LOCATIONS
+                      WHERE STATE_PROVINCE IS NULL);
+-- 위 location_id 값으로 SubQuary에 조건을 넣어서 조회
+
+SELECT *
+FROM DEPARTMENTS
+WHERE LOCATION_ID IN (1000, 1100, 1300, 2000, 2300, 2400);
+                      
+/* 월급이 가장 적은 사원 */
+SELECT emp.FIRST_NAME, emp.LAST_NAME, job.JOB_TITLE
+  FROM EMPLOYEES emp, JOBS job
+ WHERE emp.SALARY = (SELECT MIN(SALARY) FROM EMPLOYEES) -- SubQuary, min사용
+   AND emp.JOB_ID = job.JOB_ID; -- join 사용
+   
+/* 평균 급여보다 많이 받는 사원들의 명단 조회 */
+SELECT emp.FIRST_NAME, emp.LAST_NAME, job.JOB_TITLE
+  FROM EMPLOYEES emp, JOBS job
+ WHERE emp.SALARY > (SELECT AVG(SALARY) FROM EMPLOYEES) -- SubQuary, avg사용
+   AND emp.JOB_ID = job.JOB_ID; -- join 사용
+   
+/* any, all */
+SELECT SALARY
+FROM EMPLOYEES
+WHERE DEPARTMENT_ID = 20; -- salary가 13000, 6000 조회됨
+
+SELECT EMPLOYEE_ID, DEPARTMENT_ID, SALARY
+FROM EMPLOYEES
+WHERE SALARY > ANY(SELECT SALARY
+                   FROM EMPLOYEES
+                   WHERE DEPARTMENT_ID = 20); -- ANY
+-- 13000 or 6000 보다 salary가 큰 직원(= 6000보다 큰 직원)
+
+SELECT EMPLOYEE_ID, DEPARTMENT_ID, SALARY
+FROM EMPLOYEES
+WHERE SALARY > (SELECT MIN(SALARY)
+                FROM EMPLOYEES
+                WHERE DEPARTMENT_ID = 20); -- ANY를 안쓰고 MIN
+-- 6000 보다 salary가 큰 직원
+
+
+SELECT EMPLOYEE_ID, DEPARTMENT_ID, SALARY
+FROM EMPLOYEES
+WHERE SALARY > ALL(SELECT SALARY
+                   FROM EMPLOYEES
+                   WHERE DEPARTMENT_ID = 20); -- ALL
+-- 13000 and 6000 보다 salary가 큰 직원(= 13000보다 큰 직원)
+                   
+SELECT EMPLOYEE_ID, DEPARTMENT_ID, SALARY
+FROM EMPLOYEES
+WHERE SALARY > (SELECT MAX(SALARY)
+                FROM EMPLOYEES
+                WHERE DEPARTMENT_ID = 20); -- ALL을 안쓰고 MAX
+-- 13000보다 salary가 큰 직원
